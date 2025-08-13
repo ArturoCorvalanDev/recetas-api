@@ -1,0 +1,116 @@
+{
+	"info": {
+		"_postman_id": "recetas-api-createuser",
+		"name": "Recetas API - Create User",
+		"description": "Colección Postman para el endpoint de creación de usuarios en la API de Recetas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Juan Pérez\",\n    \"username\": \"juanperez\",\n    \"email\": \"juan@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\",\n    \"bio\": \"Amante de la cocina\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/register",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"register"
+					]
+				},
+				"description": "Endpoint para crear un nuevo usuario en la aplicación de recetas.\n\n**Parámetros requeridos:**\n- name: Nombre completo del usuario\n- username: Nombre de usuario único\n- email: Email único del usuario\n- password: Contraseña (mínimo 8 caracteres)\n- password_confirmation: Confirmación de la contraseña\n\n**Parámetros opcionales:**\n- bio: Biografía del usuario\n\n**Respuesta exitosa (201):**\n```json\n{\n    \"success\": true,\n    \"message\": \"User registered successfully\",\n    \"data\": {\n        \"user\": {\n            \"id\": 1,\n            \"name\": \"Juan Pérez\",\n            \"username\": \"juanperez\",\n            \"email\": \"juan@example.com\",\n            \"bio\": \"Amante de la cocina\",\n            \"created_at\": \"2024-01-01T00:00:00.000000Z\",\n            \"updated_at\": \"2024-01-01T00:00:00.000000Z\"\n        },\n        \"token\": \"1|abc123...\",\n        \"token_type\": \"Bearer\"\n    }\n}\n```\n\n**Errores de validación (422):**\n```json\n{\n    \"success\": false,\n    \"message\": \"Validation errors\",\n    \"errors\": {\n        \"email\": [\"The email field is required.\"],\n        \"username\": [\"The username has already been taken.\"]\n    }\n}\n```"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Verificar que la respuesta sea exitosa",
+					"pm.test(\"Status code is 201\", function () {",
+					"    pm.response.to.have.status(201);",
+					"});",
+					"",
+					"// Verificar que la respuesta contenga los campos esperados",
+					"pm.test(\"Response has correct structure\", function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData).to.have.property('success');",
+					"    pm.expect(jsonData).to.have.property('message');",
+					"    pm.expect(jsonData).to.have.property('data');",
+					"    pm.expect(jsonData.data).to.have.property('user');",
+					"    pm.expect(jsonData.data).to.have.property('token');",
+					"    pm.expect(jsonData.data).to.have.property('token_type');",
+					"});",
+					"",
+					"// Verificar que el token sea válido",
+					"pm.test(\"Token is present and valid\", function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData.data.token).to.be.a('string');",
+					"    pm.expect(jsonData.data.token).to.not.be.empty;",
+					"    pm.expect(jsonData.data.token_type).to.equal('Bearer');",
+					"});",
+					"",
+					"// Guardar el token para uso posterior (opcional)",
+					"if (pm.response.code === 201) {",
+					"    const jsonData = pm.response.json();",
+					"    pm.environment.set(\"auth_token\", jsonData.data.token);",
+					"    pm.environment.set(\"user_id\", jsonData.data.user.id);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

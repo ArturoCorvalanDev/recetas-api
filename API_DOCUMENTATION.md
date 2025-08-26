@@ -399,7 +399,7 @@ curl -X POST http://localhost:8000/api/v1/login \
 
 ### 2. Crear una receta
 ```bash
-curl -X POST http://localhost:8000/api/v1/recipes \
+curl -X POST http://localhost:8000/api/v1/create-recipe \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {token}" \
   -d '{

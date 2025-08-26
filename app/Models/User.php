@@ -90,9 +90,20 @@ class User extends Authenticatable
     public function favorites(): BelongsToMany
     {
         return $this->belongsToMany(Recipe::class, 'favorites')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
+public function favoriteRecipeStatuses()
+{
+    $favoriteIds = $this->favorites()->pluck('recipe_id')->toArray();
+
+    return Recipe::select('id')->get()->map(function ($recipe) use ($favoriteIds) {
+        return [
+            'id' => $recipe->id,
+            'is_favorite' => in_array($recipe->id, $favoriteIds),
+        ];
+    });
+}
     /**
      * Check if user has favorited a specific recipe.
      */

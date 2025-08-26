@@ -17,9 +17,9 @@ class CommentController extends Controller
     public function index(Recipe $recipe): JsonResponse
     {
         $comments = $recipe->comments()
-                          ->with('user')
-                          ->latest()
-                          ->paginate(10);
+            ->with('user')
+            ->latest()
+            ->paginate(10);
 
         return response()->json([
             'success' => true,
@@ -44,29 +44,41 @@ class CommentController extends Controller
             ], 422);
         }
 
-        // Check if recipe is public or user owns it
-        if (!$recipe->is_public && $recipe->user_id !== $request->user()->id) {
+        try {
+            // Verificar si la receta es pública o si el usuario la posee
+            if (!$recipe->is_public && $recipe->user_id !== $request->user()->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Recipe not found'
+                ], 404);
+            }
+
+            // Crear el comentario
+            $comment = $recipe->comments()->create([
+                'user_id' => $request->user()->id,
+                'content' => $request->content,
+            ]);
+
+            // Cargar relación de usuario
+            $comment->load('user');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment added successfully',
+                'data' => [
+                    'comment' => $comment
+                ]
+            ], 201);
+        } catch (\Throwable $th) {
+            // Devolver error en caso de excepción
             return response()->json([
                 'success' => false,
-                'message' => 'Recipe not found'
-            ], 404);
+                'message' => 'Something went wrong',
+                'error' => $th->getMessage()
+            ], 500);
         }
-
-        $comment = $recipe->comments()->create([
-            'user_id' => $request->user()->id,
-            'content' => $request->content,
-        ]);
-
-        $comment->load('user');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Comment added successfully',
-            'data' => [
-                'comment' => $comment
-            ]
-        ], 201);
     }
+
 
     /**
      * Update the specified comment.

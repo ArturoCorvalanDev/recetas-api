@@ -18,9 +18,18 @@ class RecipeController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Recipe::with(['user', 'categories', 'coverPhoto', 'ratings'])
-                      ->public();
+        $query = Recipe::with([
+            'user',
+            'categories',
+            'ingredients',
+            'steps',
+            'photos',
+            'comments.user',
+            'ratings.user'
 
+        ])
+            ->public()
+           ;
         // Search
         if ($request->has('search') && !empty($request->search)) {
             $query->search($request->search);
@@ -44,10 +53,11 @@ class RecipeController extends Controller
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
-        
+
         if (in_array($sortBy, ['created_at', 'title', 'average_rating', 'favorites_count'])) {
             $query->orderBy($sortBy, $sortOrder);
         }
+
 
         $recipes = $query->paginate($request->get('per_page', 12));
 
@@ -93,7 +103,18 @@ class RecipeController extends Controller
 
         try {
             DB::beginTransaction();
+          /*  $recipe = new Recipe();
+            $recipe->user_id = $request->user()->id;
+            $recipe->title = $request->title;
+            $recipe->description = $request->description;
+            $recipe->prep_minutes = $request->prep_minutes;
+            $recipe->cook_minutes = $request->cook_minutes;
+            $recipe->servings = $request->servings;
+            $recipe->difficulty = $request->difficulty;
+            $recipe->is_public = $request->get('is_public', true);
+            $recipe->calories = $request->calories;
 
+            $recipe->save();*/
             $recipe = Recipe::create([
                 'user_id' => $request->user()->id,
                 'title' => $request->title,
@@ -114,7 +135,8 @@ class RecipeController extends Controller
             // Attach ingredients
             if ($request->has('ingredients')) {
                 foreach ($request->ingredients as $ingredient) {
-                    $recipe->ingredients()->attach($ingredient['ingredient_id'], [
+                    $recipe->ingredients()->attach(
+                        $ingredient['ingredient_id'], [
                         'quantity' => $ingredient['quantity'] ?? null,
                         'unit' => $ingredient['unit'] ?? null,
                         'note' => $ingredient['note'] ?? null,
@@ -143,14 +165,13 @@ class RecipeController extends Controller
                     'recipe' => $recipe
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating recipe',
-                'error' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'error' => $e
             ], 500);
         }
     }
@@ -242,8 +263,14 @@ class RecipeController extends Controller
             DB::beginTransaction();
 
             $recipe->update($request->only([
-                'title', 'description', 'prep_minutes', 'cook_minutes',
-                'servings', 'difficulty', 'is_public', 'calories'
+                'title',
+                'description',
+                'prep_minutes',
+                'cook_minutes',
+                'servings',
+                'difficulty',
+                'is_public',
+                'calories'
             ]));
 
             // Update categories
@@ -285,10 +312,9 @@ class RecipeController extends Controller
                     'recipe' => $recipe
                 ]
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating recipe',
@@ -317,7 +343,6 @@ class RecipeController extends Controller
                 'success' => true,
                 'message' => 'Recipe deleted successfully'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -333,10 +358,10 @@ class RecipeController extends Controller
     public function myRecipes(Request $request): JsonResponse
     {
         $recipes = $request->user()
-                          ->recipes()
-                          ->with(['categories', 'coverPhoto', 'ratings'])
-                          ->orderBy('created_at', 'desc')
-                          ->paginate($request->get('per_page', 12));
+            ->recipes()
+            ->with(['categories', 'coverPhoto', 'ratings'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 12));
 
         return response()->json([
             'success' => true,
@@ -350,10 +375,10 @@ class RecipeController extends Controller
     public function favorites(Request $request): JsonResponse
     {
         $recipes = $request->user()
-                          ->favorites()
-                          ->with(['user', 'categories', 'coverPhoto', 'ratings'])
-                          ->orderBy('created_at', 'desc')
-                          ->paginate($request->get('per_page', 12));
+            ->favorites()
+            ->with(['user', 'categories', 'coverPhoto', 'ratings'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 12));
 
         return response()->json([
             'success' => true,
@@ -367,7 +392,7 @@ class RecipeController extends Controller
     public function toggleFavorite(Request $request, Recipe $recipe): JsonResponse
     {
         $user = $request->user();
-        
+
         if ($user->hasFavorited($recipe)) {
             $user->favorites()->detach($recipe->id);
             $message = 'Recipe removed from favorites';

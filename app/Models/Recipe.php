@@ -45,6 +45,16 @@ class Recipe extends Model
         'calories' => 'integer',
     ];
 
+    protected $appends = [
+        'total_time',
+        'average_rating',
+        'ratings_count',
+        'favorites_count',
+        'difficulty_text',
+        'url',
+        'is_favorite',
+    ];
+
     /**
      * The difficulty levels available.
      */
@@ -53,6 +63,9 @@ class Recipe extends Model
         'medium' => 'Medio',
         'hard' => 'Difícil',
     ];
+
+    protected $isFavorite = false;
+
 
     /**
      * Boot the model.
@@ -68,6 +81,17 @@ class Recipe extends Model
         });
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+
+
+    public function setIsFavorite(bool $value)
+    {
+        $this->isFavorite = $value;
+    }
     /**
      * Get the user that owns the recipe.
      */
@@ -90,8 +114,8 @@ class Recipe extends Model
     public function ingredients(): BelongsToMany
     {
         return $this->belongsToMany(Ingredient::class, 'recipe_ingredients')
-                    ->withPivot(['quantity', 'unit', 'note'])
-                    ->withTimestamps();
+            ->withPivot(['quantity', 'unit', 'note'])
+            ->withTimestamps();
     }
 
     /**
@@ -123,7 +147,7 @@ class Recipe extends Model
      */
     public function comments(): HasMany
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(Comment::class)->orderBy('created_at', 'desc');;
     }
 
     /**
@@ -140,8 +164,14 @@ class Recipe extends Model
     public function favoritedBy(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'favorites')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorites')
+            ->withTimestamps();
+    }
+
 
     /**
      * Scope a query to only include public recipes.
@@ -176,7 +206,7 @@ class Recipe extends Model
     {
         $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%");
         });
     }
 
@@ -226,5 +256,17 @@ class Recipe extends Model
     public function getUrlAttribute(): string
     {
         return route('recipes.show', $this->slug);
+    }
+
+    public function getIsFavoriteAttribute()
+    {
+        $user = auth()->user(); // usuario logueado
+
+        if (!$user) {
+            return false; // o null si prefieres
+        }
+
+        // Verifica si el usuario ha marcado la receta como favorita
+        return $this->favorites()->where('user_id', $user->id)->exists();
     }
 }

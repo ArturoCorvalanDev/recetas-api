@@ -44,7 +44,7 @@ class AuthController extends Controller
         $user->bio = $request->bio;
         $user->save();
 
-       /* $user = User::create([
+        /* $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
@@ -71,7 +71,7 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
+            'username' => 'required|string|',
             'password' => 'required|string',
         ]);
 
@@ -83,14 +83,14 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (!Auth::attempt($request->only('username', 'password'))) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
+        $user = User::where('username', $request->username)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -127,9 +127,19 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $user->load(['recipes', 'favorites', 'comments', 'ratings'])
+                'user' => $user->load([
+                    'recipes',
+                    'recipes.photos',
+                    'recipes.comments',
+                    'recipes.ingredients',
+                    'recipes.categories',
+                    'recipes.steps',
+                    'favorites',
+                    'comments',
+                    'ratings'
+                ])
             ]
-        ]);
+        ], 200);
     }
 
     /**
@@ -189,7 +199,7 @@ class AuthController extends Controller
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Current password is incorrect'
+                'message' => 'contraseña actual incorrecta'
             ], 400);
         }
 
@@ -199,7 +209,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Password changed successfully'
+            'message' => 'Contraseña cambiada'
         ]);
     }
 }

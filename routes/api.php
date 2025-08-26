@@ -29,7 +29,8 @@ Route::prefix('v1')->group(function () {
 
     // Public recipe routes
     Route::get('/recipes', [RecipeController::class, 'index']);
-    Route::get('/recipes/{slug}', [RecipeController::class, 'show']);
+    Route::get('/recipes/{slug}', [RecipeController::class, 'show'])->name('recipes.show');
+
 
     // Public category routes
     Route::get('/categories', [CategoryController::class, 'index']);
@@ -50,9 +51,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // Recipe management routes
-        Route::post('/recipes', [RecipeController::class, 'store']);
+        Route::post('/create-recipe', [RecipeController::class, 'store']);
         Route::put('/recipes/{recipe}', [RecipeController::class, 'update']);
         Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy']);
+
         Route::get('/my-recipes', [RecipeController::class, 'myRecipes']);
         Route::get('/favorites', [RecipeController::class, 'favorites']);
         Route::post('/recipes/{recipe}/favorite', [RecipeController::class, 'toggleFavorite']);

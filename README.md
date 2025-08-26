@@ -14,3 +14,4 @@ Una API REST completa para gestionar recetas de cocina, construida con Laravel 1
 - 📸 **Soporte para fotos** de recetas
 - 🔍 **Búsqueda y filtros** avanzados
 - 📱 **API RESTful** con documentación completa
+

@@ -341,7 +341,8 @@ class RecipeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Recipe deleted successfully'
+                'message' => 'Recipe deleted successfully',
+
             ]);
         } catch (\Exception $e) {
             return response()->json([

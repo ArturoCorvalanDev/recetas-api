@@ -128,12 +128,15 @@ class AuthController extends Controller
             'success' => true,
             'data' => [
                 'user' => $user->load([
-                    'recipes',
+                    'recipes' => function ($query) {
+                        $query->orderBy('created_at', 'desc'); // Por ejemplo, de más reciente a más antiguo
+                    },
                     'recipes.photos',
                     'recipes.comments',
                     'recipes.ingredients',
                     'recipes.categories',
                     'recipes.steps',
+                    'recipes.comments.user',
                     'favorites',
                     'comments',
                     'ratings'

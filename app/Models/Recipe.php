@@ -50,6 +50,7 @@ class Recipe extends Model
         'average_rating',
         'ratings_count',
         'favorites_count',
+        'comments_count',
         'difficulty_text',
         'url',
         'is_favorite',
@@ -148,6 +149,11 @@ class Recipe extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class)->orderBy('created_at', 'desc');;
+    }
+
+    public function getCommentsCountAttribute(): int
+    {
+        return $this->comments()->count();
     }
 
     /**
